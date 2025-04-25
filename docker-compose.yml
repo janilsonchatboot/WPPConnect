@@ -1,0 +1,11 @@
+version: '3'
+services:
+  whatsapp-api:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - SESSION_NAME=whatsapp-session
+    volumes:
+      - .:/app
+    restart: always
