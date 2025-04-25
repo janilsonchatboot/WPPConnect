@@ -14,8 +14,12 @@ create({
     args: ['--no-sandbox', '--disable-setuid-sandbox'], // Flags necessárias para rodar como root
   },
   catchQR: (base64Qrimg, asciiQR, attempt, urlCode) => {
-    console.log('QR RECEIVED', base64Qrimg);
-  },
+  console.log('QR Code capturado com sucesso!');
+  console.log('QR Code em Base64:', base64Qrimg);
+  console.log('QR Code ASCII:', asciiQR);
+  console.log(`Tentativa: ${attempt}`);
+  console.log(`URL do QR Code: ${urlCode}`);
+},
   statusFind: (status) => {
     console.log('Status da sessão:', status);
   },
