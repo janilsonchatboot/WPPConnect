@@ -1,0 +1,15 @@
+# Dependências do Node.js
+node_modules/
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Diretórios de build
+dist/
+build/
+
+# Arquivos do sistema operacional
+.DS_Store
+Thumbs.db
