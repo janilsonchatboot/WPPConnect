@@ -6,55 +6,50 @@ const app = express();
 app.use(express.json());
 
 let client;
-let qrCodeBase64 = null; // Armazena o QR Code para visualização
-let qrCodeGenerated = false;
+let messages = []; // Armazenar mensagens recebidas
 
-// Inicializa o WPPConnect
 create({
-  session: process.env.SESSION_NAME || 'whatsapp-session',
-  catchQR: (base64Qrimg, asciiQR, attempt, urlCode) => {
-    console.log('\n📲 QR Code capturado com sucesso!');
-    console.log('🖼️  QR Code Base64 atualizado.');
-    qrCodeBase64 = base64Qrimg;
-    qrCodeGenerated = true;
-  },
-  statusFind: (statusSession) => {
-    console.log('🔄 Status da sessão:', statusSession);
-  },
+  session: process.env.SESSION_NAME,
   puppeteerOptions: {
     headless: true,
     args: ['--no-sandbox', '--disable-setuid-sandbox'],
-    protocolTimeout: 60_000, // aumenta timeout para evitar erro
-  }
-})
-.then((clientInstance) => {
+  },
+  catchQR: (base64Qrimg, asciiQR, attempt, urlCode) => {
+    console.log('📲 QR Code capturado com sucesso!');
+    console.log('🔗 URL do QR Code:', urlCode);
+  },
+  statusFind: (status) => {
+    console.log('Status da sessão:', status);
+  },
+  messageReceived: (message) => {
+    console.log('Nova mensagem recebida:', message);
+    messages.push(message); // Adiciona a mensagem à lista
+  },
+}).then((clientInstance) => {
   client = clientInstance;
   console.log('✅ WhatsApp API conectada!');
-})
-.catch((err) => {
-  console.error('❌ Erro ao iniciar a sessão do WhatsApp:', err);
+}).catch((error) => {
+  console.error('❌ Erro ao conectar com o WhatsApp:', error);
 });
 
-// Endpoint para visualizar o QR Code
-app.get('/qrcode', (req, res) => {
-  if (!qrCodeBase64 || !qrCodeGenerated) {
-    return res.send('<h2>⏳ QR Code ainda não gerado. Aguarde...</h2>');
-  }
-
-  const html = `
-    <html>
-      <head><title>QR Code - WPPConnect</title></head>
-      <body style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;background:#f4f4f4;">
-        <h2>Escaneie o QR Code para conectar ao WhatsApp</h2>
-        <img src="${qrCodeBase64}" style="width:300px;height:300px;border:1px solid #ccc;" />
-        <p>Atualize esta página se o código expirar.</p>
-      </body>
-    </html>
-  `;
-  res.send(html);
+// Rota para pegar mensagens
+app.get('/messages', (req, res) => {
+  res.json(messages);
 });
 
-// Inicia o servidor
+// Rota para enviar mensagens
+app.post('/send', (req, res) => {
+  const { to, message } = req.body;
+  client.sendText(to, message)
+    .then(() => {
+      res.json({ status: 'Mensagem enviada com sucesso!' });
+    })
+    .catch((err) => {
+      res.status(500).json({ error: err });
+    });
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console
+  console.log(`🚀 Servidor rodando na porta ${PORT}`);
+});
